@@ -1,15 +1,23 @@
 <?php
-
+function return_value($value)
+{
+    // return JSON array
+    if (!is_array($value)) {
+        $value=array($value);
+        $value[] = 255;
+    }
+    exit(json_encode($value));
+}
 require_once("function.php");
 require_once("user.php");
 $USER = new User();
 
-$possible_url = array("get_img_list", "get_img", "get_vm_list", "get_net_list", 'get_link_list', "get_vol_list");
+$possible_url = array("get_img_list", "get_img", "get_vm_list", "get_net_list", 'get_link_list', "get_vol_list", "get_snapshot_list");
 
 $value = "An error has occurred";
 
 if (!$USER->authenticated) {
-    exit("You need to login before proceed!");
+    return_value("You need to login before proceed!");
 } elseif (isset($_POST["op"]) && isset($_POST["sha1"])) {
     $value = "Welcome Cloudland";
 }
@@ -43,6 +51,10 @@ if (isset($_GET["action"]) && in_array($_GET["action"], $possible_url))
         case "get_vol_list":
             $value = get_vol_list();
             break;
+        case "get_snapshot_list":
+            $value = get_snapshot_list();
+            break;
+
     }
 }
 
@@ -80,7 +92,11 @@ if (isset($_POST["exec"]))
             if (isset($_POST["disk_inc"])) {
                 $disk_inc = $_POST["disk_inc"];
             }
-            $value = launch_vm($_POST["image"], $_POST["vlan"], $name, $ip, $cpu, $memory, $disk_inc);
+            $metadata = "";
+            if (isset($_POST["metadata"])) {
+                $metadata = $_POST["metadata"];
+            }
+            $value = launch_vm($_POST["image"], $_POST["vlan"], $name, $ip, $cpu, $memory, $disk_inc, $metadata);
             break;
         case "clear_vm":
             if (!isset($_POST["vm_ID"])) {
@@ -229,10 +245,32 @@ if (isset($_POST["exec"]))
            }
            $value = detach_vol($_POST["vol_name"]);
            break;
+       case "create_snapshot":
+           if (!isset($_POST["vm_ID"])) {
+             $value="vm_ID is not set.";
+             break;
+           }
+           $snap_desc = "";
+           if (isset($_POST["snap_desc"])) {
+             $snap_desc = $_POST["snap_desc"];
+           }
+           $value = create_snapshot($_POST["vm_ID"], $snap_desc);
+           break;
+       case "delete_snapshot":
+           if (!isset($_POST["snapshot"])) {
+             $value="snapshot is not set.";
+             break;
+           }
+           $value = delete_snapshot($_POST["snapshot"]);
+           break;
+       case "download_snapshot":
+           if (!isset($_POST["snapshot"])) {
+             $value="snapshot is not set.";
+             break;
+           }
+           $value = download_snapshot($_POST["snapshot"]);
+           break;
     }
 }
-
-//return JSON array
-exit(json_encode($value));
+return_value($value)
 ?>
-

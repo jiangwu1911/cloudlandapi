@@ -199,6 +199,7 @@
             <option value="1024">1G</option>
             <option value="2048">2G</option>
             <option value="4096">4G</option>
+            <option value="6144">6G</option>
             <option value="8192">8G</option>
             <option value="10240">10G</option>
             <option value="16384">16G</option>
@@ -230,6 +231,24 @@
         <br />Increase disk size (G): <input type="text" name="disk_inc" size="10" value="" />
         <input type="hidden" name="execution" value="launch_vm"/>
         <input type="submit" value="launch"/>
+</form>
+<br /><h2>Create Snapshot: </h2>
+<form id="create_snapshot" action="index.php" method="POST">
+    <input type="hidden" name="execution" value="create_snapshot"/>
+    <select id="vm_ID" name="vm_ID">
+            <option value="">Instance</option>
+<?php
+                        $inst_list = get_vm_list();
+                        foreach ($inst_list as $inst):
+                            if ($inst == "")
+                                continue;
+                            $vinfo = explode('|', $inst);
+                            echo "<option> ".$vinfo[0]."</option>";
+                        endforeach;
+?>
+    </select>
+    Description: <input type="text" name="snap_desc" size="40" value="" />
+    <input type="submit" value="create"/>
 </form>
 <br /><h2>Instance Information: </h2><a href="index.php?request=get_vm_list">Refresh</a>
 <?php 
@@ -426,6 +445,18 @@
                         }
                         $value = delete_vol($_POST["vol_name"]);
                         echo "<h2>$value[0]</h2><a href=index.php?request=get_vol_list><h3>Back</h3></a>";
+                        break;
+                    case "create_snapshot":
+                        if (!isset($_POST["vm_ID"])) {
+                            echo "<h2>No vm_ID Specified</h2>";
+                            break;
+                        }
+                        $snap_desc = "";
+                        if (isset($_POST["snap_desc"])) {
+                            $snap_desc = $_POST["snap_desc"];
+                        }
+                        $value = create_snapshot($_POST["vm_ID"], $snap_desc);
+                        echo "<h2>$value[0]</h2><a href=index.php?request=get_vm_list><h3>Back</h3></a>";
                         break;
                     case "attach_nic":
                         if (!isset($_POST["vm_ID"])) {
